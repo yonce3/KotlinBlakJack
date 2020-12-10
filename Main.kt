@@ -6,6 +6,8 @@ fun main(args: Array<String>) {
     val delear = Delear()
     var deck = createDeck()
 
+    var gameOver = false
+
     // 最初のドロー
     player.firstDraw(deck)
 
@@ -16,23 +18,42 @@ fun main(args: Array<String>) {
     var finishFlag = false
     while(!finishFlag) {
         player.printPoint()
-        if (player.point <= 21) {
+        if (player.point < 21) {
             if (player.checkDraw()) {
                 player.draw(deck.elementAt(0))
                 deck.removeAt(0)
             } else {
                 finishFlag = true
             }
+        } else if(player.point == 21) {
+            println("あなたの得点が、21点になりました。")
+            finishFlag = true
         } else {
             println("あなたの得点が、21を超えたのでゲームオーバーです。")
-            exit
+            finishFlag = true
+            gameOver = true
         }
     }
 
-    // ディーラーのドロー
-    delear.showSecondCard()
-    while (delear.point <= 17) {
 
+    if (!gameOver) {
+        // ディーラーのドロー
+        delear.showSecondCard()
+        delear.showPoint()
+        while (delear.point <= 17) {
+            delear.draw(deck.elementAt(0))
+            deck.removeAt(0)
+
+            if (delear.point > 21) {
+                println("ディーラーの得点が、21を超えたのであなたの勝ちです。")
+                gameOver = true
+            }
+        }
+    }
+
+    if (!gameOver) {
+        // 勝負
+        check(player, delear)
     }
 }
 
@@ -43,8 +64,22 @@ fun createDeck(): ArrayList<Card> {
             deck.add(Card(kind.kind, i))
         }
     }
-    // return deck.shuffled(java.util.Random(0))
     return deck
+}
+
+fun check(player: Player, delear: Delear) {
+    println("あなたの得点は、${player.point}です。")
+    println("ディーラーの得点は、${delear.point}です。")
+
+    if (player.point > delear.point) {
+        println("あなたの勝ちです!")
+    } else if (player.point < delear.point) {
+        println("ディーラーの勝ちです！")
+    } else {
+        println("引き分けです！")
+    }
+
+    println("お疲れ様でした。")
 }
 
 
@@ -115,9 +150,12 @@ class Delear() {
         }
     }
 
+    fun showPoint() {
+        println("ディーラーの現在の得点は、${this.point}です。")
+    }
+
     fun showSecondCard() {
         println("ディーラーの2枚目のカードは、${hand[1].kind}の${hand[1].num}でした。")
-        println("ディーラーの現在の得点は、${this.point}です。")
     }
 }
 
@@ -138,4 +176,11 @@ enum class Kinds(val kind: String) {
     HEART("ハート"),
     SPADE("スペード"),
     CLUB("クラブ")
+}
+
+fun <T> List<T>.shuffle() : List<T> {
+    var list = mutableListOf<T>()
+    for(ite in this) list.add(ite)
+    java.util.Collections.shuffle(list)
+    return list
 }
