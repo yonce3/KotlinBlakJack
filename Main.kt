@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
     // プレイヤーのドロー
     var finishFlag = false
     while(!finishFlag) {
-        player.printPoint()
+        player.showPoint()
         if (player.point < 21) {
             if (player.checkDraw()) {
                 player.draw(deck.elementAt(0))
@@ -57,14 +57,14 @@ fun main(args: Array<String>) {
     }
 }
 
-fun createDeck(): ArrayList<Card> {
-    var deck = ArrayList<Card>()
+fun createDeck(): MutableList<Card> {
+    var deck = mutableListOf<Card>()
     for (kind in Kinds.values()) {
         for (i in 1..13) {
             deck.add(Card(kind.kind, i))
         }
     }
-    return deck
+    return deck.shuffled().toMutableList()
 }
 
 fun check(player: Player, delear: Delear) {
@@ -82,28 +82,24 @@ fun check(player: Player, delear: Delear) {
     println("お疲れ様でした。")
 }
 
-
-class Deck(var cardList: Array<Card>) {
-}
-
 class Player() {
     var point = 0
     var hand = ArrayList<Card>()
 
     fun draw(card: Card) {
-        println("あなたの引いたカードは、${card.kind}の${card.num}です")
+        println("あなたの引いたカードは、${card.kind}の${card.showNum()}です")
         hand.add(card)
         point += card.getPoint()
     }
 
-    fun firstDraw(deck: ArrayList<Card>) {
+    fun firstDraw(deck: MutableList<Card>) {
         for(i in 0..1) {
             this.draw(deck.elementAt(0))
             deck.removeAt(0)
         }
     }
 
-    fun printPoint() {
+    fun showPoint() {
         println("あなたの現在の得点は、${this.point}です")
     }
 
@@ -113,10 +109,10 @@ class Player() {
         var flag = false
         while(!flag) {
             val input = readLine()
-            if (input == "Y") {
+            if (input == "Y" || input == "y") {
                 result = true
                 flag = true
-            } else if (input == "N") {
+            } else if (input == "N" || input == "n") {
                 result = false
                 flag = true
             } else {
@@ -134,7 +130,7 @@ class Delear() {
 
     fun draw(card: Card) {
         if (drawCount != 1) {
-            println("ディーラーの引いたカードは、${card.kind}の${card.num}です。")
+            println("ディーラーの引いたカードは、${card.kind}の${card.showNum()}です。")
         } else {
             println("ディーラーの2枚目のカードは分かりません。")
         }
@@ -143,7 +139,7 @@ class Delear() {
         point += card.getPoint()
     }
 
-    fun firstDraw(deck: ArrayList<Card>) {
+    fun firstDraw(deck: MutableList<Card>) {
         for(i in 0..1) {
             this.draw(deck.elementAt(0))
             deck.removeAt(0)
@@ -161,11 +157,40 @@ class Delear() {
 
 class Card(val kind: String, val num: Int) {
     fun getPoint(): Int {
-        var result = 0
         when(this.num) {
-            1 -> result = 1
-            11, 12, 13 -> result = 10
-            else -> result = this.num
+            1 -> return this.selectAce()
+            11, 12, 13 -> return 10
+            else -> return this.num
+        }
+    }
+
+    fun showNum(): String {
+        when (this.num) {
+            1 -> return "A"
+            11 -> return "J"
+            12 -> return "Q"
+            13 -> return "K"
+            else -> return "${this.num}"
+        }
+    }
+
+    fun selectAce(): Int {
+        println("Aceを引いたので、1か11を選択できます")
+        println("1を選ぶ場合は、Y 11を選ぶ場合は、N を入力してください。")
+        val input = readLine()
+        var result = 0
+        var finishFlag = false
+
+        while (!finishFlag) {
+            if (input == "Y" || input == "y") {
+                result = 1
+                finishFlag = true
+            } else if (input == "N" || input == "n") {
+                result = 11
+                finishFlag = true
+            } else {
+                println("Y か Nで入力してください。")
+            }
         }
         return result
     }
@@ -176,11 +201,4 @@ enum class Kinds(val kind: String) {
     HEART("ハート"),
     SPADE("スペード"),
     CLUB("クラブ")
-}
-
-fun <T> List<T>.shuffle() : List<T> {
-    var list = mutableListOf<T>()
-    for(ite in this) list.add(ite)
-    java.util.Collections.shuffle(list)
-    return list
 }
